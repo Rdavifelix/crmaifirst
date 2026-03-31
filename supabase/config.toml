@@ -1,0 +1,35 @@
+# Substitua pelo ref do seu projeto Supabase (ex: abcdefghijklmnopqrst)
+project_id = "xwctzuwleyjgxutkvnws"
+
+[functions.analyze-sales-call]
+verify_jwt = false
+
+[functions.get-wavoip-token]
+verify_jwt = false
+
+[functions.get-soniox-token]
+verify_jwt = false
+
+[functions.analyze-candidate-photo]
+verify_jwt = false
+
+[functions.analyze-interview]
+verify_jwt = false
+
+[functions.create-meet-interview]
+verify_jwt = false
+
+[functions.sales-coach-analyze]
+verify_jwt = false
+
+[functions.send-candidate-whatsapp]
+verify_jwt = false
+
+[functions.uazapi-manual-connect]
+verify_jwt = false
+
+[functions.uazapi-list-instances]
+verify_jwt = false
+
+[functions.ai-sales-agent]
+verify_jwt = false

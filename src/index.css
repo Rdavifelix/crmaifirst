@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CRM Lead Tracking System - Design System
+   Premium Dark Navy + Gold Theme
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 142 60% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 20% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
+    --ring: 142 60% 45%;
+
+    --radius: 0.75rem;
+
+    /* WhatsApp-inspired colors */
+    --whatsapp: 142 70% 49%;
+    --whatsapp-dark: 142 70% 40%;
+    --whatsapp-light: 142 50% 92%;
+    --whatsapp-bubble-out: 142 50% 92%;
+    --whatsapp-bubble-in: 210 20% 96%;
+    --whatsapp-bg: 0 0% 98%;
+
+    /* Status colors */
+    --status-new: 217 80% 55%;
+    --status-contact: 199 75% 48%;
+    --status-negotiating: 38 85% 55%;
+    --status-proposal: 25 85% 53%;
+    --status-followup: 280 55% 55%;
+    --status-won: 142 60% 45%;
+    --status-lost: 0 72% 51%;
+
+    /* Post-sale colors */
+    --postsale-awaiting: 217 80% 55%;
+    --postsale-onboarding: 199 75% 48%;
+    --postsale-complete: 142 60% 45%;
+    --postsale-followup: 280 55% 55%;
+    --postsale-active: 142 45% 35%;
+
+    /* Chart colors */
+    --chart-1: 142 60% 45%;
+    --chart-2: 217 80% 55%;
+    --chart-3: 38 85% 55%;
+    --chart-4: 280 55% 55%;
+    --chart-5: 0 72% 51%;
+
+    /* Sidebar */
+    --sidebar-background: 220 20% 14%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 142 60% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 20%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 220 20% 22%;
+    --sidebar-ring: 142 60% 45%;
+  }
+
+  .dark {
+    --background: 222 47% 7%;
+    --foreground: 210 20% 92%;
+
+    --card: 222 40% 10%;
+    --card-foreground: 210 20% 92%;
+
+    --popover: 222 40% 12%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 142 60% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 30% 15%;
+    --secondary-foreground: 210 20% 85%;
+
+    --muted: 222 30% 15%;
+    --muted-foreground: 220 15% 55%;
+
+    --accent: 222 30% 18%;
+    --accent-foreground: 210 20% 92%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 142 60% 45%;
+
+    --whatsapp-light: 142 50% 15%;
+    --whatsapp-bubble-out: 142 50% 18%;
+    --whatsapp-bubble-in: 222 40% 14%;
+    --whatsapp-bg: 222 47% 8%;
+
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-primary: 142 60% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 35% 10%;
+    --sidebar-accent-foreground: 210 20% 88%;
+    --sidebar-border: 222 30% 12%;
+    --sidebar-ring: 142 60% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+}
