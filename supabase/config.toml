@@ -1,5 +1,5 @@
 # Substitua pelo ref do seu projeto Supabase (ex: abcdefghijklmnopqrst)
-project_id = "xwctzuwleyjgxutkvnws"
+project_id = "gaeimhrftedqdkjkpyyr"
 
 [functions.analyze-sales-call]
 verify_jwt = false
