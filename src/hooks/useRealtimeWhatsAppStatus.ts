@@ -30,6 +30,8 @@ function showBrowserNotification(title: string, body: string) {
 export function useRealtimeWhatsAppStatus(onDisconnect?: () => void) {
   const queryClient = useQueryClient();
   const previousStatusRef = useRef<string | null>(null);
+  const onDisconnectRef = useRef(onDisconnect);
+  onDisconnectRef.current = onDisconnect;
 
   useEffect(() => {
     // Solicitar permissão para notificações
@@ -38,7 +40,7 @@ export function useRealtimeWhatsAppStatus(onDisconnect?: () => void) {
     }
 
     const channel = supabase
-      .channel('whatsapp_status_realtime')
+      .channel(`whatsapp_status_realtime_${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -62,7 +64,7 @@ export function useRealtimeWhatsAppStatus(onDisconnect?: () => void) {
               id: 'whatsapp-disconnect-alert',
               action: {
                 label: 'Reconectar',
-                onClick: () => onDisconnect?.(),
+                onClick: () => onDisconnectRef.current?.(),
               },
             });
 
@@ -73,7 +75,7 @@ export function useRealtimeWhatsAppStatus(onDisconnect?: () => void) {
             );
 
             // Callback
-            onDisconnect?.();
+            onDisconnectRef.current?.();
           }
 
           // Detecta reconexão bem-sucedida
@@ -96,5 +98,5 @@ export function useRealtimeWhatsAppStatus(onDisconnect?: () => void) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, onDisconnect]);
+  }, [queryClient]);
 }
