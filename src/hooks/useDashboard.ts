@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { subDays, startOfDay, endOfDay, format } from 'date-fns';
+import { subDays, startOfDay, format } from 'date-fns';
+
+const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 export interface DashboardStats {
   totalLeads: number;
@@ -187,6 +189,184 @@ export function useLossReasons() {
       return Object.entries(reasonCounts)
         .map(([reason, count]) => ({ reason, count }))
         .sort((a, b) => b.count - a.count);
+    },
+  });
+}
+
+export function useMonthlyStats() {
+  return useQuery({
+    queryKey: ['monthly-stats'],
+    queryFn: async () => {
+      const now = new Date();
+      const startThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+      const [
+        { count: leadsThisMonth },
+        { count: leadsLastMonth },
+        { data: wonThis },
+        { data: wonLast },
+        { count: totalLeads },
+      ] = await Promise.all([
+        supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', startThisMonth.toISOString()),
+        supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', startLastMonth.toISOString()).lte('created_at', endLastMonth.toISOString()),
+        supabase.from('leads').select('deal_value').eq('status', 'won').gte('closed_at', startThisMonth.toISOString()),
+        supabase.from('leads').select('deal_value').eq('status', 'won').gte('closed_at', startLastMonth.toISOString()).lte('closed_at', endLastMonth.toISOString()),
+        supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', startThisMonth.toISOString()).eq('status', 'won'),
+      ]);
+
+      const revThis = wonThis?.reduce((s, l) => s + (l.deal_value || 0), 0) || 0;
+      const revLast = wonLast?.reduce((s, l) => s + (l.deal_value || 0), 0) || 0;
+      const dealsThis = wonThis?.length || 0;
+      const dealsLast = wonLast?.length || 0;
+      const lThis = leadsThisMonth || 0;
+      const lLast = leadsLastMonth || 0;
+
+      return {
+        leadsThisMonth: lThis,
+        leadsLastMonth: lLast,
+        leadsChange: lLast > 0 ? ((lThis - lLast) / lLast) * 100 : 0,
+        revenueThisMonth: revThis,
+        revenueLastMonth: revLast,
+        revenueChange: revLast > 0 ? ((revThis - revLast) / revLast) * 100 : 0,
+        dealsThisMonth: dealsThis,
+        dealsLastMonth: dealsLast,
+        dealsChange: dealsLast > 0 ? ((dealsThis - dealsLast) / dealsLast) * 100 : 0,
+        wonThisMonth: totalLeads || 0,
+      };
+    },
+  });
+}
+
+export function useSellerRanking() {
+  return useQuery({
+    queryKey: ['seller-ranking'],
+    queryFn: async () => {
+      const { data: wonLeads } = await supabase
+        .from('leads')
+        .select('assigned_to, deal_value')
+        .eq('status', 'won')
+        .not('assigned_to', 'is', null);
+
+      if (!wonLeads?.length) return [];
+
+      const userIds = [...new Set(wonLeads.map((l) => l.assigned_to!))] as string[];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      const profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
+
+      const agg: Record<string, { name: string; deals: number; revenue: number }> = {};
+      wonLeads.forEach((lead) => {
+        const uid = lead.assigned_to!;
+        if (!agg[uid]) agg[uid] = { name: profileMap[uid] || 'Sem nome', deals: 0, revenue: 0 };
+        agg[uid].deals++;
+        agg[uid].revenue += lead.deal_value || 0;
+      });
+
+      return Object.entries(agg)
+        .map(([id, d]) => ({ id, ...d }))
+        .sort((a, b) => b.revenue - a.revenue);
+    },
+  });
+}
+
+export function useRevenueByMonth(months: number = 6) {
+  return useQuery({
+    queryKey: ['revenue-by-month', months],
+    queryFn: async () => {
+      const start = new Date();
+      start.setMonth(start.getMonth() - months + 1);
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+
+      const { data } = await supabase
+        .from('leads')
+        .select('deal_value, closed_at')
+        .eq('status', 'won')
+        .gte('closed_at', start.toISOString())
+        .not('closed_at', 'is', null);
+
+      const monthData: Record<string, number> = {};
+      for (let i = 0; i < months; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (months - 1) + i);
+        monthData[format(d, 'yyyy-MM')] = 0;
+      }
+
+      data?.forEach((lead) => {
+        if (lead.closed_at) {
+          const key = format(new Date(lead.closed_at), 'yyyy-MM');
+          if (key in monthData) monthData[key] += lead.deal_value || 0;
+        }
+      });
+
+      return Object.entries(monthData).map(([key, revenue]) => {
+        const [year, month] = key.split('-');
+        return { month: `${MONTHS_PT[parseInt(month) - 1]}/${year.slice(2)}`, revenue };
+      });
+    },
+  });
+}
+
+export function useMarketingDashboard() {
+  return useQuery({
+    queryKey: ['marketing-dashboard'],
+    queryFn: async () => {
+      const { data: campaigns } = await supabase
+        .from('marketing_campaigns')
+        .select('name, status, metrics');
+
+      let totalSpend = 0;
+      let totalImpressions = 0;
+      let totalClicks = 0;
+      const activeCampaigns = campaigns?.filter((c) => c.status === 'ACTIVE').length || 0;
+
+      campaigns?.forEach((c) => {
+        const m = c.metrics as Record<string, string> | null;
+        if (m) {
+          totalSpend += parseFloat(String(m.spend || 0));
+          totalImpressions += parseInt(String(m.impressions || 0));
+          totalClicks += parseInt(String(m.clicks || 0));
+        }
+      });
+
+      const { count: leadsFromAds } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .not('utm_source', 'is', null);
+
+      const { data: leadsBySource } = await supabase
+        .from('leads')
+        .select('utm_source')
+        .not('utm_source', 'is', null);
+
+      const sourceCount: Record<string, number> = {};
+      leadsBySource?.forEach((l) => {
+        const s = l.utm_source || 'Outros';
+        sourceCount[s] = (sourceCount[s] || 0) + 1;
+      });
+      const sourceChartData = Object.entries(sourceCount)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 8);
+
+      const lfa = leadsFromAds || 0;
+      return {
+        activeCampaigns,
+        totalCampaigns: campaigns?.length || 0,
+        totalSpend,
+        totalImpressions,
+        totalClicks,
+        leadsFromAds: lfa,
+        cpl: lfa > 0 && totalSpend > 0 ? totalSpend / lfa : 0,
+        ctr: totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0,
+        sourceChartData,
+        campaigns: campaigns || [],
+      };
     },
   });
 }
