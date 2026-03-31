@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.ai-sales-agent]
 verify_jwt = false
+
+[functions.google-sheets-data]
+verify_jwt = false
