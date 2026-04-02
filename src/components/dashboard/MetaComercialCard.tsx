@@ -1,11 +1,10 @@
-import { useMemo } from "react";
-import { Target, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Target, ChevronRight, Edit2, Check, X, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 import { useAvancos } from "@/hooks/useAvancos";
 import { useSheetsData } from "@/contexts/SheetsDataContext";
 import { useVendasCharts } from "@/hooks/useVendasCharts";
-import { useDateRange } from "@/hooks/useDateRange";
-import { format, endOfMonth, differenceInBusinessDays, startOfDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, differenceInBusinessDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 
@@ -18,22 +17,111 @@ const fmtBRL = (v: number) => {
 const fmtBRLFull = (v: number) =>
   `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-function ProgressBar({ pct }: { pct: number }) {
+function getProgressColor(pct: number, expectedPct: number): string {
+  const ratio = expectedPct > 0 ? pct / expectedPct : 1;
+  if (pct >= 100) return "hsl(142, 71%, 45%)"; // green
+  if (ratio >= 0.9) return "hsl(var(--primary))"; // on track: blue
+  if (ratio >= 0.7) return "hsl(38, 92%, 50%)";  // slightly behind: amber
+  return "hsl(0, 84%, 60%)"; // significantly behind: red
+}
+
+function PaceIcon({ pct, expectedPct }: { pct: number; expectedPct: number }) {
+  if (expectedPct === 0) return null;
+  const ratio = pct / expectedPct;
+  if (ratio >= 0.95) return <TrendingUp className="w-3.5 h-3.5" style={{ color: "hsl(142, 71%, 45%)" }} />;
+  if (ratio >= 0.75) return <Minus className="w-3.5 h-3.5" style={{ color: "hsl(38, 92%, 50%)" }} />;
+  return <TrendingDown className="w-3.5 h-3.5" style={{ color: "hsl(0, 84%, 60%)" }} />;
+}
+
+interface ProgressBarProps {
+  pct: number;
+  expectedPct: number;
+  color: string;
+}
+
+function ProgressBar({ pct, expectedPct, color }: ProgressBarProps) {
   const clampedPct = Math.min(pct, 100);
+  const clampedExpected = Math.min(expectedPct, 100);
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
+      <div className="flex-1 h-3 rounded-full overflow-visible relative" style={{ background: "hsl(var(--muted))" }}>
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{
-            width: `${clampedPct}%`,
-            background: "hsl(var(--primary))",
-          }}
+          style={{ width: `${clampedPct}%`, background: color }}
         />
+        {/* Expected pace marker */}
+        {clampedExpected > 0 && clampedExpected < 100 && (
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full opacity-60"
+            style={{ left: `${clampedExpected}%`, background: "hsl(var(--foreground))" }}
+          />
+        )}
       </div>
-      <span className="text-sm font-bold flex-shrink-0" style={{ color: "hsl(var(--foreground))" }}>
+      <span className="text-sm font-bold flex-shrink-0 w-12 text-right" style={{ color: "hsl(var(--foreground))" }}>
         {pct.toFixed(0)}%
       </span>
+    </div>
+  );
+}
+
+interface InlineEditProps {
+  label: string;
+  value: number;
+  onSave: (val: number) => void;
+  format?: "currency" | "number";
+}
+
+function InlineEdit({ label, value, onSave, format: fmt = "number" }: InlineEditProps) {
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState("");
+
+  const start = () => {
+    setInput(String(value || ""));
+    setEditing(true);
+  };
+
+  const save = () => {
+    const parsed = parseFloat(input.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+    onSave(parsed);
+    setEditing(false);
+  };
+
+  const cancel = () => setEditing(false);
+
+  if (!editing) {
+    return (
+      <button
+        onClick={start}
+        className="group flex items-center gap-1 text-xs opacity-60 hover:opacity-100 transition-opacity"
+        style={{ color: "hsl(var(--muted-foreground))" }}
+      >
+        <Edit2 className="w-3 h-3" />
+        <span>{label}: {value > 0 ? (fmt === "currency" ? fmtBRLFull(value) : String(value)) : "definir"}</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <input
+        autoFocus
+        className="text-xs h-7 px-2 rounded-md border outline-none w-36"
+        style={{
+          background: "hsl(var(--background))",
+          border: "1px solid hsl(var(--border))",
+          color: "hsl(var(--foreground))",
+        }}
+        placeholder={fmt === "currency" ? "Ex: 100000" : "Ex: 20"}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") cancel(); }}
+      />
+      <button onClick={save} className="w-6 h-6 rounded flex items-center justify-center hover:opacity-80" style={{ background: "hsl(var(--primary))", color: "white" }}>
+        <Check className="w-3 h-3" />
+      </button>
+      <button onClick={cancel} className="w-6 h-6 rounded flex items-center justify-center hover:opacity-80" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+        <X className="w-3 h-3" />
+      </button>
     </div>
   );
 }
@@ -41,11 +129,21 @@ function ProgressBar({ pct }: { pct: number }) {
 export function MetaComercialCard() {
   const navigate = useNavigate();
   const { leads, isLoading: sheetsLoading } = useSheetsData();
-  const { range } = useDateRange();
-  const charts = useVendasCharts(leads, range, "all");
+  const currentMonthRange = useMemo(() => {
+    const now = new Date();
+    return { from: startOfMonth(now), to: endOfMonth(now) };
+  }, []);
+  const charts = useVendasCharts(leads, currentMonthRange, "all");
   const period = format(new Date(), "yyyy-MM");
-  const { goals, isLoading: goalsLoading } = useGoals(period);
+  const { goals, isLoading: goalsLoading, upsert } = useGoals(period);
   const { avancos, isLoading: avancosLoading } = useAvancos();
+
+  const today = startOfDay(new Date());
+  const monthEnd = endOfMonth(today);
+  const dayOfMonth = today.getDate();
+  const totalDaysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  // Expected pace: fraction of month elapsed
+  const expectedPct = (dayOfMonth / totalDaysInMonth) * 100;
 
   const metrics = useMemo(() => {
     const metaReceita = goals.find(g => g.member_name === null && g.metric === "receita")?.target ?? 0;
@@ -57,14 +155,12 @@ export function MetaComercialCard() {
     const pctReceita = metaReceita > 0 ? (cashCollected / metaReceita) * 100 : 0;
     const pctVendas = metaVendas > 0 ? (vendas / metaVendas) * 100 : 0;
 
-    const today = startOfDay(new Date());
-    const monthEnd = endOfMonth(today);
     const diasUteis = differenceInBusinessDays(monthEnd, today);
-    const dayOfMonth = new Date().getDate();
+    const porDia = dayOfMonth > 0 ? cashCollected / dayOfMonth : 0;
+    const projecao = porDia * totalDaysInMonth;
 
     const faltam = Math.max(metaReceita - cashCollected, 0);
-    const porDia = dayOfMonth > 0 ? cashCollected / dayOfMonth : 0;
-    const projecao = porDia * new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const necessarioPorDia = diasUteis > 0 ? faltam / diasUteis : 0;
 
     const naMesa = avancos.reduce((s, a) => s + (a.valor || 0), 0);
 
@@ -80,8 +176,20 @@ export function MetaComercialCard() {
       faltam,
       diasUteis,
       naMesa,
+      necessarioPorDia,
     };
-  }, [charts, goals, avancos]);
+  }, [charts, goals, avancos, dayOfMonth, totalDaysInMonth, monthEnd, today]);
+
+  const receitaColor = getProgressColor(metrics.pctReceita, expectedPct);
+  const vendasColor = getProgressColor(metrics.pctVendas, expectedPct);
+
+  const handleSaveReceita = (val: number) => {
+    upsert({ period, member_name: null, role: null, metric: "receita", target: val });
+  };
+
+  const handleSaveVendas = (val: number) => {
+    upsert({ period, member_name: null, role: null, metric: "vendas", target: val });
+  };
 
   const isLoading = sheetsLoading || goalsLoading || avancosLoading;
 
@@ -117,32 +225,54 @@ export function MetaComercialCard() {
       <div className="px-6 pb-3 space-y-5">
         {/* Cash Collected */}
         <div>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl font-black font-display" style={{ color: "hsl(var(--primary))" }}>
-              {fmtBRLFull(metrics.cashCollected)}
-            </span>
-            {metrics.metaReceita > 0 && (
-              <span className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-                / {fmtBRLFull(metrics.metaReceita)}
+          <div className="flex items-baseline justify-between mb-1">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black font-display" style={{ color: receitaColor }}>
+                {fmtBRLFull(metrics.cashCollected)}
               </span>
-            )}
+              {metrics.metaReceita > 0 && (
+                <span className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  / {fmtBRLFull(metrics.metaReceita)}
+                </span>
+              )}
+            </div>
+            <PaceIcon pct={metrics.pctReceita} expectedPct={expectedPct} />
           </div>
-          <ProgressBar pct={metrics.pctReceita} />
+          <ProgressBar pct={metrics.pctReceita} expectedPct={expectedPct} color={receitaColor} />
+          <div className="mt-1.5">
+            <InlineEdit
+              label="Meta receita"
+              value={metrics.metaReceita}
+              onSave={handleSaveReceita}
+              format="currency"
+            />
+          </div>
         </div>
 
         {/* Vendas / Logos */}
         <div>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl font-black font-display" style={{ color: "hsl(var(--primary))" }}>
-              {metrics.vendas}
-            </span>
-            {metrics.metaVendas > 0 && (
-              <span className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-                / {metrics.metaVendas} logos
+          <div className="flex items-baseline justify-between mb-1">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black font-display" style={{ color: vendasColor }}>
+                {metrics.vendas}
               </span>
-            )}
+              {metrics.metaVendas > 0 && (
+                <span className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  / {metrics.metaVendas} logos
+                </span>
+              )}
+            </div>
+            <PaceIcon pct={metrics.pctVendas} expectedPct={expectedPct} />
           </div>
-          <ProgressBar pct={metrics.pctVendas} />
+          <ProgressBar pct={metrics.pctVendas} expectedPct={expectedPct} color={vendasColor} />
+          <div className="mt-1.5">
+            <InlineEdit
+              label="Meta vendas"
+              value={metrics.metaVendas}
+              onSave={handleSaveVendas}
+              format="number"
+            />
+          </div>
         </div>
       </div>
 
@@ -150,9 +280,9 @@ export function MetaComercialCard() {
       <div className="grid grid-cols-5 divide-x" style={{ borderTop: "1px solid hsl(var(--border))", borderColor: "hsl(var(--border))" }}>
         {[
           { label: "PROJEÇÃO", value: fmtBRL(metrics.projecao) },
-          { label: "/DIA", value: fmtBRL(metrics.porDia) },
-          { label: "FALTAM", value: fmtBRL(metrics.faltam) },
-          { label: "DIAS", value: String(metrics.diasUteis) },
+          { label: "/DIA ATUAL", value: fmtBRL(metrics.porDia) },
+          { label: "/DIA PRECISA", value: metrics.metaReceita > 0 ? fmtBRL(metrics.necessarioPorDia) : "—" },
+          { label: "DIAS ÚTEIS", value: String(metrics.diasUteis) },
         ].map((m) => (
           <div key={m.label} className="py-3.5 text-center">
             <p className="text-sm font-black" style={{ color: "hsl(var(--foreground))" }}>{m.value}</p>

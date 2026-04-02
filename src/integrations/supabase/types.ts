@@ -1583,6 +1583,419 @@ export type Database = {
           },
         ]
       }
+      goals: {
+        Row: {
+          id: string
+          period: string
+          member_name: string | null
+          role: string | null
+          metric: string
+          target: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          period: string
+          member_name?: string | null
+          role?: string | null
+          metric: string
+          target?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          period?: string
+          member_name?: string | null
+          role?: string | null
+          metric?: string
+          target?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sheets_leads: {
+        Row: {
+          id: string
+          origem: string
+          instagram: string
+          email: string
+          nome: string
+          telefone: string
+          faturamento: string
+          profissao: string
+          mql: string
+          socio: string
+          lead_scoring: string
+          data_cadastro: string | null
+          data_contato: string | null
+          data_agendamento: string | null
+          data_call: string | null
+          hora_call: string
+          sdr: string
+          status_call: string
+          status_venda: string
+          motivo_noshow: string
+          cash_collected: number
+          valor_total: number
+          closer: string
+          produto_vendido: string
+          valor_oportunidade: number
+          data_conclusao: string | null
+          razao_perda: string
+          link_reuniao: string
+          observacoes: string
+          data_2call: string | null
+          hora_2call: string
+          status_call_2: string
+          status_venda_2: string
+          motivo_noshow_2: string
+          cash_collected_2: number
+          valor_total_2: number
+          ad_name_email: string
+          ad_name_telefone: string
+          row_hash: string
+          imported_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          origem?: string
+          instagram?: string
+          email?: string
+          nome?: string
+          telefone?: string
+          faturamento?: string
+          profissao?: string
+          mql?: string
+          socio?: string
+          lead_scoring?: string
+          data_cadastro?: string | null
+          data_contato?: string | null
+          data_agendamento?: string | null
+          data_call?: string | null
+          hora_call?: string
+          sdr?: string
+          status_call?: string
+          status_venda?: string
+          motivo_noshow?: string
+          cash_collected?: number
+          valor_total?: number
+          closer?: string
+          produto_vendido?: string
+          valor_oportunidade?: number
+          data_conclusao?: string | null
+          razao_perda?: string
+          link_reuniao?: string
+          observacoes?: string
+          data_2call?: string | null
+          hora_2call?: string
+          status_call_2?: string
+          status_venda_2?: string
+          motivo_noshow_2?: string
+          cash_collected_2?: number
+          valor_total_2?: number
+          ad_name_email?: string
+          ad_name_telefone?: string
+          imported_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          origem?: string
+          instagram?: string
+          email?: string
+          nome?: string
+          telefone?: string
+          faturamento?: string
+          profissao?: string
+          mql?: string
+          socio?: string
+          lead_scoring?: string
+          data_cadastro?: string | null
+          data_contato?: string | null
+          data_agendamento?: string | null
+          data_call?: string | null
+          hora_call?: string
+          sdr?: string
+          status_call?: string
+          status_venda?: string
+          motivo_noshow?: string
+          cash_collected?: number
+          valor_total?: number
+          closer?: string
+          produto_vendido?: string
+          valor_oportunidade?: number
+          data_conclusao?: string | null
+          razao_perda?: string
+          link_reuniao?: string
+          observacoes?: string
+          data_2call?: string | null
+          hora_2call?: string
+          status_call_2?: string
+          status_venda_2?: string
+          motivo_noshow_2?: string
+          cash_collected_2?: number
+          valor_total_2?: number
+          ad_name_email?: string
+          ad_name_telefone?: string
+          imported_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sheets_meta_ads: {
+        Row: {
+          id: string
+          day: string | null
+          campaign_name: string
+          campaign_id: string
+          ad_set_name: string
+          ad_name: string
+          ad_id: string
+          amount_spent: number
+          impressions: number
+          three_sec_views: number
+          video_watches_75: number
+          link_clicks: number
+          landing_page_views: number
+          row_hash: string
+          imported_at: string
+        }
+        Insert: {
+          id?: string
+          day?: string | null
+          campaign_name?: string
+          campaign_id?: string
+          ad_set_name?: string
+          ad_name?: string
+          ad_id?: string
+          amount_spent?: number
+          impressions?: number
+          three_sec_views?: number
+          video_watches_75?: number
+          link_clicks?: number
+          landing_page_views?: number
+          imported_at?: string
+        }
+        Update: {
+          id?: string
+          day?: string | null
+          campaign_name?: string
+          campaign_id?: string
+          ad_set_name?: string
+          ad_name?: string
+          ad_id?: string
+          amount_spent?: number
+          impressions?: number
+          three_sec_views?: number
+          video_watches_75?: number
+          link_clicks?: number
+          landing_page_views?: number
+          imported_at?: string
+        }
+        Relationships: []
+      }
+      sheets_ghl_base: {
+        Row: {
+          id: string
+          contact_id: string
+          first_name: string
+          last_name: string
+          phone: string
+          email: string
+          business_name: string
+          created: string | null
+          last_activity: string | null
+          tags: string
+          utm_placement: string
+          utm_target: string
+          utm_term: string
+          utm_campaign: string
+          utm_medium: string
+          utm_content: string
+          utm_source: string
+          faixa_faturamento: string
+          area_atuacao: string
+          faixa_faturamento_mensal: string
+          ad_name: string
+          imported_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id?: string
+          first_name?: string
+          last_name?: string
+          phone?: string
+          email?: string
+          business_name?: string
+          created?: string | null
+          last_activity?: string | null
+          tags?: string
+          utm_placement?: string
+          utm_target?: string
+          utm_term?: string
+          utm_campaign?: string
+          utm_medium?: string
+          utm_content?: string
+          utm_source?: string
+          faixa_faturamento?: string
+          area_atuacao?: string
+          faixa_faturamento_mensal?: string
+          ad_name?: string
+          imported_at?: string
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          first_name?: string
+          last_name?: string
+          phone?: string
+          email?: string
+          business_name?: string
+          created?: string | null
+          last_activity?: string | null
+          tags?: string
+          utm_placement?: string
+          utm_target?: string
+          utm_term?: string
+          utm_campaign?: string
+          utm_medium?: string
+          utm_content?: string
+          utm_source?: string
+          faixa_faturamento?: string
+          area_atuacao?: string
+          faixa_faturamento_mensal?: string
+          ad_name?: string
+          imported_at?: string
+        }
+        Relationships: []
+      }
+      sheets_ghl_leads: {
+        Row: {
+          id: string
+          contact_id: string
+          nome: string
+          email: string
+          telefone: string
+          data_criacao: string | null
+          tags: string
+          source: string
+          faturamento: string
+          profissao: string
+          campaign_first: string
+          ad_name_first: string
+          utm_source: string
+          session_source: string
+          campaign_latest: string
+          ad_name_latest: string
+          funil: string
+          socio: string
+          webinar_tag: string
+          imported_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id?: string
+          nome?: string
+          email?: string
+          telefone?: string
+          data_criacao?: string | null
+          tags?: string
+          source?: string
+          faturamento?: string
+          profissao?: string
+          campaign_first?: string
+          ad_name_first?: string
+          utm_source?: string
+          session_source?: string
+          campaign_latest?: string
+          ad_name_latest?: string
+          funil?: string
+          socio?: string
+          webinar_tag?: string
+          imported_at?: string
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          nome?: string
+          email?: string
+          telefone?: string
+          data_criacao?: string | null
+          tags?: string
+          source?: string
+          faturamento?: string
+          profissao?: string
+          campaign_first?: string
+          ad_name_first?: string
+          utm_source?: string
+          session_source?: string
+          campaign_latest?: string
+          ad_name_latest?: string
+          funil?: string
+          socio?: string
+          webinar_tag?: string
+          imported_at?: string
+        }
+        Relationships: []
+      }
+      avancos: {
+        Row: {
+          id: string
+          lead_nome: string | null
+          lead_empresa: string | null
+          lead_telefone: string | null
+          lead_email: string | null
+          closer_name: string | null
+          sdr_name: string | null
+          lead_scoring: number | null
+          valor: number | null
+          data_limite: string | null
+          funil: string | null
+          etapas: Json
+          status: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lead_nome?: string | null
+          lead_empresa?: string | null
+          lead_telefone?: string | null
+          lead_email?: string | null
+          closer_name?: string | null
+          sdr_name?: string | null
+          lead_scoring?: number | null
+          valor?: number | null
+          data_limite?: string | null
+          funil?: string | null
+          etapas?: Json
+          status?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lead_nome?: string | null
+          lead_empresa?: string | null
+          lead_telefone?: string | null
+          lead_email?: string | null
+          closer_name?: string | null
+          sdr_name?: string | null
+          lead_scoring?: number | null
+          valor?: number | null
+          data_limite?: string | null
+          funil?: string | null
+          etapas?: Json
+          status?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_ai_agent_dashboard: {

@@ -26,6 +26,8 @@ import {
   ClipboardList,
   Megaphone,
   CalendarDays,
+  Flag,
+  TableProperties,
 } from 'lucide-react';
 import { WhatsAppStatusBadge } from '@/components/whatsapp/WhatsAppStatusBadge';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -38,6 +40,11 @@ const menuItems = [
     icon: BarChart3,
   },
   {
+    title: 'Metas',
+    url: '/metas',
+    icon: Flag,
+  },
+  {
     title: 'Gerador UTM',
     url: '/utm-generator',
     icon: LinkIcon,
@@ -46,6 +53,11 @@ const menuItems = [
     title: 'WhatsApp CRM',
     url: '/whatsapp',
     icon: MessageCircle,
+  },
+  {
+    title: 'Pipeline Vendas',
+    url: '/pipeline-vendas',
+    icon: TableProperties,
   },
   {
     title: 'Funil de Vendas',

@@ -36,3 +36,6 @@ verify_jwt = false
 
 [functions.google-sheets-data]
 verify_jwt = false
+
+[functions.sheets-import]
+verify_jwt = false

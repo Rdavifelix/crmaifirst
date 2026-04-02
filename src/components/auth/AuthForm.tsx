@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
-import { lovable } from '@/integrations/lovable';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Link as LinkIcon, BarChart3 } from 'lucide-react';
 
 export function AuthForm() {
@@ -133,8 +133,9 @@ export function AuthForm() {
               disabled={googleLoading || loading}
               onClick={async () => {
                 setGoogleLoading(true);
-                await lovable.auth.signInWithOAuth('google', {
-                  redirect_uri: window.location.origin,
+                await supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: { redirectTo: window.location.origin },
                 });
                 setGoogleLoading(false);
               }}

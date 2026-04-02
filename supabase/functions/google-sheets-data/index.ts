@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,7 @@ const corsHeaders = {
 const SHEET_ID = "16ZQU2d2u16bYotXCDm9DvO_XR_1iOYoci89QjAY3Xao";
 const SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 const TAB_MAP: Record<string, string> = {
   leads: "LEADS",
@@ -91,7 +93,7 @@ async function getAccessToken(sa: { client_email: string; private_key: string })
   const tokenData = await tokenRes.json();
   cachedToken = {
     token: tokenData.access_token,
-    expiresAt: now + (tokenData.expires_in ?? 3600) - 300, // refresh 5 min early
+    expiresAt: now + (tokenData.expires_in ?? 3600) - 300,
   };
 
   return cachedToken.token;
@@ -112,22 +114,52 @@ serve(async (req) => {
     );
   }
 
+  // ── Supabase client (service role for cache access) ─────────────────────────
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // ── Check cache ─────────────────────────────────────────────────────────────
   try {
-    // Handle potential double-encoding or wrapping of the secret
-    let parsed: string = saJson;
-    // If the secret is wrapped in extra quotes, unwrap it
-    if (parsed.startsWith('"') && parsed.endsWith('"')) {
-      try {
-        parsed = JSON.parse(parsed);
-      } catch {
-        // not double-encoded, use as-is
+    const { data: cached } = await supabase
+      .from("sheets_cache")
+      .select("data, cached_at")
+      .eq("id", "main")
+      .single();
+
+    if (cached && cached.cached_at) {
+      const age = Date.now() - new Date(cached.cached_at).getTime();
+      if (age < CACHE_TTL_MS) {
+        console.log(`Cache HIT (age: ${Math.round(age / 1000)}s)`);
+        return new Response(JSON.stringify(cached.data), {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "X-Cache": "HIT",
+            "X-Cache-Age": String(Math.round(age / 1000)),
+          },
+        });
       }
+      console.log(`Cache STALE (age: ${Math.round(age / 1000)}s) — refreshing`);
+    } else {
+      console.log("Cache MISS — fetching from Google");
+    }
+  } catch (e) {
+    console.warn("Cache check failed, proceeding without cache:", e);
+  }
+
+  // ── Fetch from Google Sheets ─────────────────────────────────────────────────
+  try {
+    let parsed: string = saJson;
+    if (parsed.startsWith('"') && parsed.endsWith('"')) {
+      try { parsed = JSON.parse(parsed); } catch { /* use as-is */ }
     }
     const sa = JSON.parse(parsed);
     const accessToken = await getAccessToken(sa);
 
     const results: Record<string, string[][]> = {};
     let rateLimited = false;
+
     const fetches = Object.entries(TAB_MAP).map(async ([key, tabName]) => {
       const encoded = encodeURIComponent(tabName);
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encoded}`;
@@ -136,16 +168,15 @@ serve(async (req) => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (res.status === 429) {
-          const body = await res.text();
-          console.error(`Google Sheets API error for tab "${tabName}" [429]: ${body}`);
+          console.error(`Google Sheets rate limit for tab "${tabName}"`);
           rateLimited = true;
           results[key] = [];
           return;
         }
         if (!res.ok) {
           const body = await res.text();
-          console.error(`Google Sheets API error for tab "${tabName}" [${res.status}]: ${body}`);
-          results[key] = []; // gracefully degrade
+          console.error(`Google Sheets error for tab "${tabName}" [${res.status}]: ${body}`);
+          results[key] = [];
           return;
         }
         const data = await res.json();
@@ -158,7 +189,6 @@ serve(async (req) => {
 
     await Promise.all(fetches);
 
-    // If any tab was rate-limited, tell the client so it can preserve its existing state
     if (rateLimited) {
       return new Response(JSON.stringify({ rateLimited: true }), {
         status: 429,
@@ -166,8 +196,24 @@ serve(async (req) => {
       });
     }
 
+    // ── Store in cache ─────────────────────────────────────────────────────────
+    try {
+      await supabase.from("sheets_cache").upsert({
+        id: "main",
+        data: results,
+        cached_at: new Date().toISOString(),
+      });
+      console.log("Cache updated");
+    } catch (e) {
+      console.warn("Failed to update cache:", e);
+    }
+
     return new Response(JSON.stringify(results), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "X-Cache": "MISS",
+      },
     });
   } catch (error: unknown) {
     console.error("Error fetching Google Sheets:", error);

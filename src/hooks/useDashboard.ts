@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { subDays, startOfDay, format } from 'date-fns';
+import { subDays, startOfDay, startOfMonth, endOfMonth, format } from 'date-fns';
 
 const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -239,15 +239,20 @@ export function useMonthlyStats() {
   });
 }
 
-export function useSellerRanking() {
+export function useSellerRanking(period?: string) {
+  const effectivePeriod = period ?? format(new Date(), 'yyyy-MM');
   return useQuery({
-    queryKey: ['seller-ranking'],
+    queryKey: ['seller-ranking', effectivePeriod],
     queryFn: async () => {
+      const monthStart = startOfMonth(new Date(effectivePeriod + '-02'));
+      const monthEnd = endOfMonth(monthStart);
       const { data: wonLeads } = await supabase
         .from('leads')
         .select('assigned_to, deal_value')
         .eq('status', 'won')
-        .not('assigned_to', 'is', null);
+        .not('assigned_to', 'is', null)
+        .gte('closed_at', monthStart.toISOString())
+        .lte('closed_at', monthEnd.toISOString());
 
       if (!wonLeads?.length) return [];
 

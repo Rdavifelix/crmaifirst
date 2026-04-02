@@ -26,6 +26,8 @@ import AgendaPage from "./pages/AgendaPage";
 import MarketingPage from "./pages/MarketingPage";
 import MarketingCampaignsPage from "./pages/MarketingCampaignsPage";
 import MarketingCreativesPage from "./pages/MarketingCreativesPage";
+import MetasPage from "./pages/MetasPage";
+import PipelineVendasPage from "./pages/PipelineVendasPage";
 import { Loader2 } from "lucide-react";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { SetupRequired } from "@/components/setup/SetupRequired";
@@ -120,6 +122,8 @@ const App = () => {
               <Route path="/marketing" element={<ProtectedRoute><MarketingPage /></ProtectedRoute>} />
               <Route path="/marketing/campaigns" element={<ProtectedRoute><MarketingCampaignsPage /></ProtectedRoute>} />
               <Route path="/marketing/creatives" element={<ProtectedRoute><MarketingCreativesPage /></ProtectedRoute>} />
+              <Route path="/metas" element={<ProtectedRoute><MetasPage /></ProtectedRoute>} />
+              <Route path="/pipeline-vendas" element={<ProtectedRoute><PipelineVendasPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
